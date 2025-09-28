@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { Home, Users, Building2, Plus, Edit, Trash } from "lucide-react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function AdminDashboard({ onLogout }) {
   const [activeTab, setActiveTab] = useState("kos");
   const [kosList, setKosList] = useState([]);
   const [users, setUsers] = useState([]);
   const [bookings, setBookings] = useState([]);
-
-  // Form kos
-  const [name, setName] = useState("");
-  const [location, setLocation] = useState("");
-  const [price, setPrice] = useState("");
-  const [availableRooms, setAvailableRooms] = useState("");
-  const [image, setImage] = useState(null); // file input
-  const [editingId, setEditingId] = useState(null);
-
-  // Riwayat booking per user
   const [expandedUserId, setExpandedUserId] = useState(null);
 
-  // Fetch data dari API
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -41,64 +41,6 @@ export default function AdminDashboard({ onLogout }) {
     fetchData();
   }, []);
 
-  // Tambah / Update Kos
-  const saveKos = async () => {
-    // Kalau tambah kos → gambar wajib
-    if (!name || !location || !price || !availableRooms || (!editingId && !image)) {
-      alert("Lengkapi semua field!");
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("location", location);
-      formData.append("price", price);
-      formData.append("available_rooms", availableRooms);
-
-      // hanya tambahkan gambar kalau ada file baru
-      if (image) {
-        formData.append("image", image);
-      }
-
-      if (editingId) {
-        await axios.put(`http://localhost:3001/api/kos/${editingId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else {
-        await axios.post("http://localhost:3001/api/kos", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
-
-      // Refresh data kos
-      const res = await axios.get("http://localhost:3001/api/kos");
-      setKosList(res.data);
-
-      // Reset form
-      setName("");
-      setLocation("");
-      setPrice("");
-      setAvailableRooms("");
-      setImage(null);
-      setEditingId(null);
-    } catch (err) {
-      console.error(err);
-      alert("Gagal menyimpan kos!");
-    }
-  };
-
-  // Edit Kos
-  const editKos = (k) => {
-    setName(k.name);
-    setLocation(k.location);
-    setPrice(k.price);
-    setAvailableRooms(k.available_rooms);
-    setEditingId(k.id);
-    setImage(null); // reset image supaya tidak wajib diubah
-  };
-
-  // Hapus Kos
   const deleteKos = async (id) => {
     if (!window.confirm("Apakah yakin ingin menghapus kos ini?")) return;
 
@@ -111,7 +53,6 @@ export default function AdminDashboard({ onLogout }) {
     }
   };
 
-  // Hapus User
   const deleteUser = async (id) => {
     if (!window.confirm("Apakah yakin ingin menghapus user ini?")) return;
 
@@ -124,11 +65,20 @@ export default function AdminDashboard({ onLogout }) {
     }
   };
 
-  // Upload gambar kos
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) setImage(file);
-  };
+  // Data untuk visualisasi management kos (dashboard)
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+
+  const totalKos = kosList.length;
+  const totalAvailableRooms = kosList.reduce((acc, k) => acc + k.available_rooms, 0);
+  const totalBookedRooms = bookings.reduce((acc, b) => acc + b.rooms, 0);
+  const totalRooms = totalAvailableRooms + totalBookedRooms;
+
+  const roomStatusData = [
+    { name: "Tersedia", value: totalAvailableRooms },
+    { name: "Terisi", value: totalBookedRooms },
+  ];
+
+  
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -141,19 +91,31 @@ export default function AdminDashboard({ onLogout }) {
           <nav className="flex-1 px-4 py-4 space-y-2">
             <button
               onClick={() => setActiveTab("dashboard")}
-              className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-200 w-full text-left"
+              className={`flex items-center gap-3 p-2 rounded-md w-full text-left ${
+                activeTab === "dashboard"
+                  ? "bg-blue-100 font-semibold border-l-4 border-blue-600"
+                  : "hover:bg-gray-200"
+              }`}
             >
               <Home size={18} /> Dashboard
             </button>
             <button
               onClick={() => setActiveTab("users")}
-              className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-200 w-full text-left"
+              className={`flex items-center gap-3 p-2 rounded-md w-full text-left ${
+                activeTab === "users"
+                  ? "bg-blue-100 font-semibold border-l-4 border-blue-600"
+                  : "hover:bg-gray-200"
+              }`}
             >
               <Users size={18} /> Users
             </button>
             <button
               onClick={() => setActiveTab("kos")}
-              className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-200 w-full text-left"
+              className={`flex items-center gap-3 p-2 rounded-md w-full text-left ${
+                activeTab === "kos"
+                  ? "bg-blue-100 font-semibold border-l-4 border-blue-600"
+                  : "hover:bg-gray-200"
+              }`}
             >
               <Building2 size={18} /> Kos
             </button>
@@ -168,12 +130,72 @@ export default function AdminDashboard({ onLogout }) {
       </aside>
 
       {/* Content */}
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 overflow-auto">
         {/* Dashboard */}
         {activeTab === "dashboard" && (
-          <h1 className="text-3xl font-semibold text-gray-800">
-            Selamat datang di Admin Dashboard
-          </h1>
+          <div>
+            <h1 className="text-3xl font-semibold text-gray-800 mb-6">
+              Dashboard Admin
+            </h1>
+
+            {/* Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow p-6 text-center">
+                <h2 className="text-xl font-semibold mb-2">Total Kos</h2>
+                <p className="text-3xl font-bold text-blue-700">{totalKos}</p>
+              </div>
+              <div className="bg-white rounded-xl shadow p-6 text-center">
+                <h2 className="text-xl font-semibold mb-2">Total Kamar</h2>
+                <p className="text-3xl font-bold text-blue-700">{totalRooms}</p>
+                <p className="text-gray-500 text-sm">
+                  (Tersedia: {totalAvailableRooms} | Terisi: {totalBookedRooms})
+                </p>
+              </div>
+              <div className="bg-white rounded-xl shadow p-6 text-center">
+                <h2 className="text-xl font-semibold mb-2">Rata-rata Harga</h2>
+                <p className="text-3xl font-bold text-blue-700">
+                  Rp{" "}
+                  {(
+                    kosList.reduce((acc, k) => acc + Number(k.price), 0) /
+                      totalKos || 0
+                  ).toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {/* Charts */}
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+              <div className="bg-white rounded-xl shadow p-6">
+                <h3 className="text-xl font-semibold mb-4 text-center">
+                  Status Kamar
+                </h3>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={roomStatusData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label
+                    >
+                      {roomStatusData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              
+            </div>
+          </div>
         )}
 
         {/* Users */}
@@ -231,9 +253,7 @@ export default function AdminDashboard({ onLogout }) {
                               <thead>
                                 <tr className="bg-gray-100">
                                   <th className="px-3 py-2 border">Nama Kos</th>
-                                  <th className="px-3 py-2 border">
-                                    Jumlah Kamar
-                                  </th>
+                                  <th className="px-3 py-2 border">Jumlah Kamar</th>
                                   <th className="px-3 py-2 border">Tanggal</th>
                                 </tr>
                               </thead>
@@ -247,12 +267,8 @@ export default function AdminDashboard({ onLogout }) {
                                       <td className="px-3 py-2 border">
                                         {kos ? kos.name : "Kos telah dihapus"}
                                       </td>
-                                      <td className="px-3 py-2 border">
-                                        {b.rooms}
-                                      </td>
-                                      <td className="px-3 py-2 border">
-                                        {b.date}
-                                      </td>
+                                      <td className="px-3 py-2 border">{b.rooms}</td>
+                                      <td className="px-3 py-2 border">{b.date}</td>
                                     </tr>
                                   );
                                 })}
@@ -274,88 +290,16 @@ export default function AdminDashboard({ onLogout }) {
           <div>
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-3xl font-semibold text-gray-800">
-                Daftar Kos
+                Management Kos
               </h1>
               <button
-                onClick={saveKos}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                onClick={() => navigate("/admin/add-kos")}
+                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
               >
-                <Plus size={18} /> {editingId ? "Update Kos" : "Tambah Kos"}
+                <Plus size={16} /> Tambah Kos
               </button>
             </div>
 
-            {/* Form input */}
-            <div className="grid grid-cols-5 gap-4 bg-white p-4 rounded-xl shadow mb-8">
-              <input
-                className="border rounded p-2"
-                placeholder="Nama Kos"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <input
-                className="border rounded p-2"
-                placeholder="Lokasi"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              />
-              <input
-                className="border rounded p-2"
-                type="number"
-                placeholder="Harga / bulan"
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-              />
-              <input
-                className="border rounded p-2"
-                type="number"
-                placeholder="Jumlah Kamar"
-                value={availableRooms}
-                onChange={(e) => setAvailableRooms(Number(e.target.value))}
-              />
-
-              {/* Upload Gambar */}
-              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-2 relative">
-                <input
-                  type="file"
-                  accept="image/*"
-                  id="imageUpload"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="imageUpload"
-                  className="cursor-pointer flex flex-col items-center gap-2 text-gray-600 hover:text-blue-600"
-                >
-                  {image ? (
-                    <img
-                      src={URL.createObjectURL(image)}
-                      alt="Preview"
-                      className="w-20 h-20 object-cover rounded-lg shadow"
-                    />
-                  ) : (
-                    <>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-8 w-8 text-gray-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 15a4 4 0 100-8 4 4 0 000 8zM21 15a4 4 0 100-8 4 4 0 000 8z"
-                        />
-                      </svg>
-                      <span className="text-sm">Pilih Gambar</span>
-                    </>
-                  )}
-                </label>
-              </div>
-            </div>
-
-            {/* List Kos */}
             {kosList.length === 0 ? (
               <p className="text-gray-600">Belum ada kos.</p>
             ) : (
@@ -386,7 +330,7 @@ export default function AdminDashboard({ onLogout }) {
                     </div>
                     <div className="mt-4 flex gap-3">
                       <button
-                        onClick={() => editKos(k)}
+                        onClick={() => navigate(`/admin/edit-kos/${k.id}`)}
                         className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm"
                       >
                         <Edit size={16} /> Edit

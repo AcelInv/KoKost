@@ -3,6 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import axios from "axios";
 
+// Import icon dari react-icons
+import { FiWifi } from "react-icons/fi";
+import { FaParking, FaBath, FaUserFriends } from "react-icons/fa";
+import { MdTv, MdBlock } from "react-icons/md";
+import { GiBabyBottle } from "react-icons/gi";
+
 export default function DetailKos({ user, onBook }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -136,6 +142,50 @@ export default function DetailKos({ user, onBook }) {
               {kos.description || "Belum ada deskripsi untuk kos ini."}
             </p>
           </div>
+
+          {/* Fasilitas (statis) */}
+          <div className="bg-white rounded-xl shadow p-5 mt-6">
+            <h2 className="text-xl font-semibold mb-4">Fasilitas</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-gray-700">
+              <div className="flex items-center gap-2">
+                <FiWifi className="text-blue-500 text-xl" />
+                <span>WiFi Gratis</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaParking className="text-blue-500 text-xl" />
+                <span>Parkir</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaBath className="text-blue-500 text-xl" />
+                <span>Kamar Mandi</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MdTv className="text-blue-500 text-xl" />
+                <span>TV Kabel</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Peraturan khusus tipe kamar ini */}
+          <div className="bg-white rounded-xl shadow p-5 mt-6">
+            <h2 className="text-xl font-semibold mb-4">
+              Peraturan khusus tipe kamar ini
+            </h2>
+            <div className="flex flex-col gap-3 text-gray-700">
+              <div className="flex items-center gap-2">
+                <FaUserFriends className="text-blue-500 text-xl" />
+                <span>Tipe ini bisa diisi maks. 2 orang/ kamar</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MdBlock className="text-red-500 text-xl" />
+                <span>Tidak untuk pasutri</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <GiBabyBottle className="text-pink-500 text-xl" />
+                <span>Tidak boleh bawa anak</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Info & Booking */}
@@ -181,7 +231,9 @@ export default function DetailKos({ user, onBook }) {
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-lg p-8 w-96 text-center">
-            <h2 className="text-2xl font-bold text-green-600 mb-4">Booking Sukses!</h2>
+            <h2 className="text-2xl font-bold text-green-600 mb-4">
+              Booking Sukses!
+            </h2>
             <p className="text-gray-700 mb-6">
               Terima kasih, booking Anda untuk <b>{kos.name}</b> berhasil.
             </p>

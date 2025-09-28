@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
 import DetailKos from "./pages/DetailKos";
 import AdminDashboard from "./pages/AdminDashboard";
+import EditKosPage from "./pages/EditKosPage";
 
 export default function App() {
   const [data, setData] = useState(() => loadData());
@@ -99,6 +100,12 @@ export default function App() {
       : <Navigate to="/" />
   }
 />
+
+<Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/kos" element={<AdminDashboard />} />
+        <Route path="/admin/edit-kos/:id" element={<EditKosPage />} />
+        {/* <Route path="/admin/add-kos" element={<AddKosPage />} /> */}
+        <Route path="*" element={<Navigate to="/admin/kos" replace />} />
 
       </Routes>
     </Router>
