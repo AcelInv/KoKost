@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function Register({ onRegister }) {
@@ -8,13 +8,26 @@ export default function Register({ onRegister }) {
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
 
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // cegah reload
+    try {
+      await onRegister(username, email, password);
+      window.alert("Registrasi berhasil! Silakan login.");
+      navigate("/"); // arahkan ke login
+    } catch (err) {
+      window.alert("Registrasi gagal. Coba lagi.");
+      console.error(err);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600">
       <div className="bg-white shadow-xl rounded-2xl flex w-full max-w-5xl overflow-hidden">
         {/* Left: Form */}
         <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
           <div className="mb-6 flex justify-between items-center">
-            {/* Dropdown bahasa contoh */}
             <h1 className="text-2xl font-bold text-blue-600">KoKost</h1>
           </div>
 
@@ -26,7 +39,8 @@ export default function Register({ onRegister }) {
             </Link>
           </p>
 
-          <div className="space-y-4">
+          {/* FORM */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username */}
             <div className="relative">
               <FiUser className="absolute left-3 top-3 text-gray-400" />
@@ -36,6 +50,7 @@ export default function Register({ onRegister }) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
               />
             </div>
             {/* Email */}
@@ -47,6 +62,7 @@ export default function Register({ onRegister }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
               />
             </div>
             {/* Password + toggle */}
@@ -58,6 +74,7 @@ export default function Register({ onRegister }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
               />
               <button
                 type="button"
@@ -70,7 +87,7 @@ export default function Register({ onRegister }) {
             </div>
 
             <button
-              onClick={() => onRegister(username, email, password)}
+              type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors"
             >
               SIGN UP
@@ -78,16 +95,12 @@ export default function Register({ onRegister }) {
             <p className="text-xs text-gray-400 text-center">
               By clicking the Sign Up button, you agree to the Privacy Policy.
             </p>
-          </div>
+          </form>
         </div>
 
         {/* Right: Illustration */}
         <div className="hidden md:flex w-1/2 bg-blue-50 items-center justify-center">
-          <img
-            src="/images/kos.jpg"
-            alt="Illustration"
-            className=" max-w-lg"
-          />
+          <img src="/images/kos.jpg" alt="Illustration" className="max-w-lg" />
         </div>
       </div>
     </div>

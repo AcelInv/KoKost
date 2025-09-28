@@ -7,6 +7,11 @@ export default function Login({ onLogin }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false); // kontrol lihat/simpan
 
+  const handleSubmit = (e) => {
+    e.preventDefault(); // cegah reload halaman
+    onLogin(email, password);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600">
       <div className="bg-white shadow-xl rounded-2xl flex w-full max-w-5xl overflow-hidden">
@@ -24,7 +29,8 @@ export default function Login({ onLogin }) {
             </Link>
           </p>
 
-          <div className="space-y-4">
+          {/* FORM */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -36,6 +42,7 @@ export default function Login({ onLogin }) {
                 placeholder="you@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
 
@@ -51,6 +58,7 @@ export default function Login({ onLogin }) {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
                 <button
                   type="button"
@@ -64,21 +72,17 @@ export default function Login({ onLogin }) {
             </div>
 
             <button
-              onClick={() => onLogin(email, password)}
+              type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors"
             >
               Sign In
             </button>
-          </div>
+          </form>
         </div>
 
         {/* Right: Illustration */}
         <div className="hidden md:flex w-1/2 bg-blue-50 items-center justify-center">
-          <img
-            src="/images/kos.jpg"
-            alt="Illustration"
-            className="max-w-md"
-          />
+          <img src="/images/kos.jpg" alt="Illustration" className="max-w-md" />
         </div>
       </div>
     </div>

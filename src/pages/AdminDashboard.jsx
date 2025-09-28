@@ -43,7 +43,8 @@ export default function AdminDashboard({ onLogout }) {
 
   // Tambah / Update Kos
   const saveKos = async () => {
-    if (!name || !location || !price || !availableRooms || !image) {
+    // Kalau tambah kos → gambar wajib
+    if (!name || !location || !price || !availableRooms || (!editingId && !image)) {
       alert("Lengkapi semua field!");
       return;
     }
@@ -54,7 +55,11 @@ export default function AdminDashboard({ onLogout }) {
       formData.append("location", location);
       formData.append("price", price);
       formData.append("available_rooms", availableRooms);
-      formData.append("image", image);
+
+      // hanya tambahkan gambar kalau ada file baru
+      if (image) {
+        formData.append("image", image);
+      }
 
       if (editingId) {
         await axios.put(`http://localhost:3001/api/kos/${editingId}`, formData, {
@@ -90,6 +95,7 @@ export default function AdminDashboard({ onLogout }) {
     setPrice(k.price);
     setAvailableRooms(k.available_rooms);
     setEditingId(k.id);
+    setImage(null); // reset image supaya tidak wajib diubah
   };
 
   // Hapus Kos
@@ -129,7 +135,9 @@ export default function AdminDashboard({ onLogout }) {
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-md flex flex-col justify-between">
         <div>
-          <div className="px-6 py-4 text-2xl font-bold text-blue-700 border-b">KoKost</div>
+          <div className="px-6 py-4 text-2xl font-bold text-blue-700 border-b">
+            KoKost
+          </div>
           <nav className="flex-1 px-4 py-4 space-y-2">
             <button
               onClick={() => setActiveTab("dashboard")}
@@ -171,7 +179,9 @@ export default function AdminDashboard({ onLogout }) {
         {/* Users */}
         {activeTab === "users" && (
           <div>
-            <h1 className="text-3xl font-semibold text-gray-800 mb-6">Daftar Users</h1>
+            <h1 className="text-3xl font-semibold text-gray-800 mb-6">
+              Daftar Users
+            </h1>
             {users.length === 0 ? (
               <p className="text-gray-600">Belum ada user.</p>
             ) : (
@@ -181,15 +191,22 @@ export default function AdminDashboard({ onLogout }) {
                   const isExpanded = expandedUserId === u.id;
 
                   return (
-                    <div key={u.id} className="bg-white rounded-xl shadow p-4 flex flex-col">
+                    <div
+                      key={u.id}
+                      className="bg-white rounded-xl shadow p-4 flex flex-col"
+                    >
                       <div className="flex justify-between items-center">
                         <div>
-                          <h2 className="text-xl font-bold text-blue-700 mb-1">{u.email}</h2>
+                          <h2 className="text-xl font-bold text-blue-700 mb-1">
+                            {u.email}
+                          </h2>
                           <p className="text-gray-600 mb-2">Role: {u.role}</p>
                         </div>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setExpandedUserId(isExpanded ? null : u.id)}
+                            onClick={() =>
+                              setExpandedUserId(isExpanded ? null : u.id)
+                            }
                             className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm"
                           >
                             Info
@@ -206,26 +223,36 @@ export default function AdminDashboard({ onLogout }) {
                       {isExpanded && (
                         <div className="mt-4 overflow-x-auto">
                           {userBookings.length === 0 ? (
-                            <p className="text-gray-600 text-sm">Belum pernah booking.</p>
+                            <p className="text-gray-600 text-sm">
+                              Belum pernah booking.
+                            </p>
                           ) : (
                             <table className="min-w-full border border-gray-300">
                               <thead>
                                 <tr className="bg-gray-100">
                                   <th className="px-3 py-2 border">Nama Kos</th>
-                                  <th className="px-3 py-2 border">Jumlah Kamar</th>
+                                  <th className="px-3 py-2 border">
+                                    Jumlah Kamar
+                                  </th>
                                   <th className="px-3 py-2 border">Tanggal</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {userBookings.map((b) => {
-                                  const kos = kosList.find((k) => k.id === b.kosId);
+                                  const kos = kosList.find(
+                                    (k) => k.id === b.kosId
+                                  );
                                   return (
                                     <tr key={b.id} className="text-center">
                                       <td className="px-3 py-2 border">
                                         {kos ? kos.name : "Kos telah dihapus"}
                                       </td>
-                                      <td className="px-3 py-2 border">{b.rooms}</td>
-                                      <td className="px-3 py-2 border">{b.date}</td>
+                                      <td className="px-3 py-2 border">
+                                        {b.rooms}
+                                      </td>
+                                      <td className="px-3 py-2 border">
+                                        {b.date}
+                                      </td>
                                     </tr>
                                   );
                                 })}
@@ -246,7 +273,9 @@ export default function AdminDashboard({ onLogout }) {
         {activeTab === "kos" && (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-3xl font-semibold text-gray-800">Daftar Kos</h1>
+              <h1 className="text-3xl font-semibold text-gray-800">
+                Daftar Kos
+              </h1>
               <button
                 onClick={saveKos}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
@@ -274,16 +303,56 @@ export default function AdminDashboard({ onLogout }) {
                 type="number"
                 placeholder="Harga / bulan"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => setPrice(Number(e.target.value))}
               />
               <input
                 className="border rounded p-2"
                 type="number"
                 placeholder="Jumlah Kamar"
                 value={availableRooms}
-                onChange={(e) => setAvailableRooms(e.target.value)}
+                onChange={(e) => setAvailableRooms(Number(e.target.value))}
               />
-              <input type="file" accept="image/*" onChange={handleImageChange} />
+
+              {/* Upload Gambar */}
+              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-2 relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="imageUpload"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="imageUpload"
+                  className="cursor-pointer flex flex-col items-center gap-2 text-gray-600 hover:text-blue-600"
+                >
+                  {image ? (
+                    <img
+                      src={URL.createObjectURL(image)}
+                      alt="Preview"
+                      className="w-20 h-20 object-cover rounded-lg shadow"
+                    />
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 15a4 4 0 100-8 4 4 0 000 8zM21 15a4 4 0 100-8 4 4 0 000 8z"
+                        />
+                      </svg>
+                      <span className="text-sm">Pilih Gambar</span>
+                    </>
+                  )}
+                </label>
+              </div>
             </div>
 
             {/* List Kos */}
@@ -292,7 +361,10 @@ export default function AdminDashboard({ onLogout }) {
             ) : (
               <div className="grid md:grid-cols-3 gap-6">
                 {kosList.map((k) => (
-                  <div key={k.id} className="bg-white rounded-xl shadow p-4 flex flex-col">
+                  <div
+                    key={k.id}
+                    className="bg-white rounded-xl shadow p-4 flex flex-col"
+                  >
                     <div className="flex-1">
                       {k.image_url && (
                         <img
@@ -301,7 +373,9 @@ export default function AdminDashboard({ onLogout }) {
                           className="w-full h-40 object-cover rounded mb-2"
                         />
                       )}
-                      <h2 className="text-xl font-bold text-blue-700 mb-1">{k.name}</h2>
+                      <h2 className="text-xl font-bold text-blue-700 mb-1">
+                        {k.name}
+                      </h2>
                       <p className="text-gray-600">{k.location}</p>
                       <p className="font-semibold mt-2">
                         Rp {Number(k.price).toLocaleString()} / bulan
