@@ -1,15 +1,27 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { FiEye, FiEyeOff } from "react-icons/fi"; // ikon mata
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function Login({ onLogin }) {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // kontrol lihat/simpan
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); // cegah reload halaman
-    onLogin(email, password);
+  const [error, setError] = useState(""); // buat simpan error dari server
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(""); // reset error dulu
+
+    try {
+      const result = await onLogin(username, password);
+      if (result?.success === false) {
+        setError(result.message); // tampilkan pesan error dari backend
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Terjadi error koneksi ke server");
+    }
   };
 
   return (
@@ -17,9 +29,7 @@ export default function Login({ onLogin }) {
       <div className="bg-white shadow-xl rounded-2xl flex w-full max-w-5xl overflow-hidden">
         {/* Left: Form */}
         <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
-          <div className="mb-6 flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-blue-600">KoKost</h1>
-          </div>
+          <h1 className="text-2xl font-bold text-blue-600 mb-6">KoKost</h1>
 
           <h2 className="text-3xl font-bold text-gray-800 mb-2">Sign In</h2>
           <p className="text-gray-500 mb-6">
@@ -29,24 +39,23 @@ export default function Login({ onLogin }) {
             </Link>
           </p>
 
-          {/* FORM */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
+            {/* Username */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                E-Mail
+                Username
               </label>
               <input
-                type="email"
+                type="text"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                placeholder="you@gmail.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="yourusername"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
 
-            {/* Password + toggle */}
+            {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Password
@@ -64,12 +73,16 @@ export default function Login({ onLogin }) {
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                 </button>
               </div>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <p className="text-red-500 text-sm text-center">{error}</p>
+            )}
 
             <button
               type="submit"

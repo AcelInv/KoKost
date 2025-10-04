@@ -57,7 +57,7 @@ export default function EditKosPage() {
       });
 
       alert("Berhasil update kos");
-      navigate("/admin/kos");
+      navigate("/admin");
     } catch (err) {
       console.error(err);
       alert("Gagal update kos");

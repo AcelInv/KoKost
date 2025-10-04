@@ -65,7 +65,7 @@ export default function UserDashboard({ user, setSelectedKos, onLogout }) {
           <h1 className="text-2xl font-bold text-blue-600">KoKost</h1>
           <div className="flex items-center gap-4">
             <span className="text-gray-700 hidden sm:block">
-              Halo, <span className="font-semibold">{user?.email}</span>
+              Halo, <span className="font-semibold">{user?.username}</span>
             </span>
             <button
               onClick={onLogout}
@@ -149,7 +149,7 @@ export default function UserDashboard({ user, setSelectedKos, onLogout }) {
                 onClick={() => {
                   setMinPrice(tempMin);
                   setMaxPrice(tempMax);
-                  setShowFilter(false); // otomatis tutup setelah simpan
+                  setShowFilter(false);
                 }}
                 className="text-green-600 font-semibold"
               >
@@ -162,8 +162,9 @@ export default function UserDashboard({ user, setSelectedKos, onLogout }) {
         {loading && <p className="text-gray-500">Memuat data kos...</p>}
         {error && <p className="text-red-500">{error}</p>}
 
-        {!loading && !error && (
-          filtered.length === 0 ? (
+        {!loading &&
+          !error &&
+          (filtered.length === 0 ? (
             <p className="text-gray-500">
               Tidak ada kos yang cocok dengan pencarian atau filter.
             </p>
@@ -176,12 +177,17 @@ export default function UserDashboard({ user, setSelectedKos, onLogout }) {
                   onClick={() => setSelectedKos && setSelectedKos(k)}
                   className="bg-white rounded-xl shadow hover:shadow-lg transition transform hover:-translate-y-1 overflow-hidden flex flex-col cursor-pointer"
                 >
-                  <div className="h-48 w-full overflow-hidden">
+                  <div className="h-48 w-full overflow-hidden relative">
                     <img
                       src={`http://localhost:3001${k.image_url}`}
                       alt={k.name}
                       className="object-cover w-full h-full hover:scale-105 transition-transform duration-300"
                     />
+                    {k.availableRooms === 0 && (
+                      <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
+                        Full booked
+                      </span>
+                    )}
                   </div>
                   <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
@@ -197,16 +203,17 @@ export default function UserDashboard({ user, setSelectedKos, onLogout }) {
                       <p className="text-blue-600 font-semibold mb-1">
                         Rp {k.price.toLocaleString()} / bulan
                       </p>
-                      <p className="text-sm text-gray-600">
-                        Tersedia: {k.availableRooms} kamar
-                      </p>
+                      {k.availableRooms > 0 && (
+                        <p className="text-sm text-gray-600">
+                          Tersedia: {k.availableRooms} kamar
+                        </p>
+                      )}
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
-          )
-        )}
+          ))}
       </main>
     </div>
   );

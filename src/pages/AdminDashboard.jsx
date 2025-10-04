@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Home, Users, Building2, Plus, Edit, Trash } from "lucide-react";
+import {
+  Home,
+  Users,
+  Building2,
+  Plus,
+  Edit,
+  Trash,
+  ClipboardList,
+} from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -12,7 +20,7 @@ import {
 } from "recharts";
 
 export default function AdminDashboard({ onLogout }) {
-  const [activeTab, setActiveTab] = useState("kos");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [kosList, setKosList] = useState([]);
   const [users, setUsers] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -65,20 +73,28 @@ export default function AdminDashboard({ onLogout }) {
     }
   };
 
-  // Data untuk visualisasi management kos (dashboard)
+  // Visualisasi data
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
-
   const totalKos = kosList.length;
-  const totalAvailableRooms = kosList.reduce((acc, k) => acc + k.available_rooms, 0);
-  const totalBookedRooms = bookings.reduce((acc, b) => acc + b.rooms, 0);
+  const totalAvailableRooms = kosList.reduce(
+    (acc, k) => acc + (k.available_rooms || 0),
+    0
+  );
+  const totalBookedRooms = bookings.reduce((acc, b) => acc + (b.rooms || 0), 0);
   const totalRooms = totalAvailableRooms + totalBookedRooms;
 
-  const roomStatusData = [
-    { name: "Tersedia", value: totalAvailableRooms },
-    { name: "Terisi", value: totalBookedRooms },
-  ];
+  const avgPrice =
+    totalKos > 0
+      ? kosList.reduce((acc, k) => acc + (Number(k.price) || 0), 0) / totalKos
+      : 0;
 
-  
+  const roomStatusData =
+    totalRooms > 0
+      ? [
+          { name: "Tersedia", value: totalAvailableRooms },
+          { name: "Terisi", value: totalBookedRooms },
+        ]
+      : [];
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -120,7 +136,20 @@ export default function AdminDashboard({ onLogout }) {
               <Building2 size={18} /> Kos
             </button>
             <button
-              onClick={onLogout}
+              onClick={() => setActiveTab("bookings")}
+              className={`flex items-center gap-3 p-2 rounded-md w-full text-left ${
+                activeTab === "bookings"
+                  ? "bg-blue-100 font-semibold border-l-4 border-blue-600"
+                  : "hover:bg-gray-200"
+              }`}
+            >
+              <ClipboardList size={18} /> Bookings
+            </button>
+            <button
+              onClick={() => {
+                onLogout();
+                navigate("/");
+              }}
               className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white w-full px-4 py-2 rounded-md"
             >
               Logout
@@ -137,8 +166,6 @@ export default function AdminDashboard({ onLogout }) {
             <h1 className="text-3xl font-semibold text-gray-800 mb-6">
               Dashboard Admin
             </h1>
-
-            {/* Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white rounded-xl shadow p-6 text-center">
                 <h2 className="text-xl font-semibold mb-2">Total Kos</h2>
@@ -154,17 +181,12 @@ export default function AdminDashboard({ onLogout }) {
               <div className="bg-white rounded-xl shadow p-6 text-center">
                 <h2 className="text-xl font-semibold mb-2">Rata-rata Harga</h2>
                 <p className="text-3xl font-bold text-blue-700">
-                  Rp{" "}
-                  {(
-                    kosList.reduce((acc, k) => acc + Number(k.price), 0) /
-                      totalKos || 0
-                  ).toLocaleString()}
+                  Rp {avgPrice.toLocaleString()}
                 </p>
               </div>
             </div>
 
-            {/* Charts */}
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+            {roomStatusData.length > 0 && (
               <div className="bg-white rounded-xl shadow p-6">
                 <h3 className="text-xl font-semibold mb-4 text-center">
                   Status Kamar
@@ -192,9 +214,7 @@ export default function AdminDashboard({ onLogout }) {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-
-              
-            </div>
+            )}
           </div>
         )}
 
@@ -209,9 +229,10 @@ export default function AdminDashboard({ onLogout }) {
             ) : (
               <div className="space-y-4">
                 {users.map((u) => {
-                  const userBookings = bookings.filter((b) => b.userId === u.id);
+                  const userBookings = bookings.filter(
+                    (b) => b.user_id === u.id
+                  );
                   const isExpanded = expandedUserId === u.id;
-
                   return (
                     <div
                       key={u.id}
@@ -241,7 +262,6 @@ export default function AdminDashboard({ onLogout }) {
                           </button>
                         </div>
                       </div>
-
                       {isExpanded && (
                         <div className="mt-4 overflow-x-auto">
                           {userBookings.length === 0 ? (
@@ -253,22 +273,28 @@ export default function AdminDashboard({ onLogout }) {
                               <thead>
                                 <tr className="bg-gray-100">
                                   <th className="px-3 py-2 border">Nama Kos</th>
-                                  <th className="px-3 py-2 border">Jumlah Kamar</th>
+                                  <th className="px-3 py-2 border">
+                                    Jumlah Kamar
+                                  </th>
                                   <th className="px-3 py-2 border">Tanggal</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {userBookings.map((b) => {
                                   const kos = kosList.find(
-                                    (k) => k.id === b.kosId
+                                    (k) => k.id === b.kos_id
                                   );
                                   return (
                                     <tr key={b.id} className="text-center">
                                       <td className="px-3 py-2 border">
                                         {kos ? kos.name : "Kos telah dihapus"}
                                       </td>
-                                      <td className="px-3 py-2 border">{b.rooms}</td>
-                                      <td className="px-3 py-2 border">{b.date}</td>
+                                      <td className="px-3 py-2 border">
+                                        {b.rooms || 0}
+                                      </td>
+                                      <td className="px-3 py-2 border">
+                                        {b.start_date || "-"}
+                                      </td>
                                     </tr>
                                   );
                                 })}
@@ -299,7 +325,6 @@ export default function AdminDashboard({ onLogout }) {
                 <Plus size={16} /> Tambah Kos
               </button>
             </div>
-
             {kosList.length === 0 ? (
               <p className="text-gray-600">Belum ada kos.</p>
             ) : (
@@ -322,10 +347,10 @@ export default function AdminDashboard({ onLogout }) {
                       </h2>
                       <p className="text-gray-600">{k.location}</p>
                       <p className="font-semibold mt-2">
-                        Rp {Number(k.price).toLocaleString()} / bulan
+                        Rp {Number(k.price || 0).toLocaleString()} / bulan
                       </p>
                       <p className="text-sm text-gray-500">
-                        Tersedia: {k.available_rooms} kamar
+                        Tersedia: {k.available_rooms || 0} kamar
                       </p>
                     </div>
                     <div className="mt-4 flex gap-3">
@@ -345,6 +370,49 @@ export default function AdminDashboard({ onLogout }) {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Bookings */}
+        {activeTab === "bookings" && (
+          <div>
+            <h1 className="text-3xl font-semibold text-gray-800 mb-6">
+              Daftar Booking
+            </h1>
+            {bookings.length === 0 ? (
+              <p className="text-gray-600">Belum ada booking.</p>
+            ) : (
+              <table className="min-w-full border border-gray-300 bg-white rounded-xl shadow">
+                <thead>
+                  <tr className="bg-gray-100 text-left">
+                    <th className="px-3 py-2 border">User</th>
+                    <th className="px-3 py-2 border">Kos</th>
+                    <th className="px-3 py-2 border">Jumlah</th>
+                    <th className="px-3 py-2 border">Tanggal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.map((b) => {
+                    const kos = kosList.find((k) => k.id === b.kos_id);
+                    const user = users.find((u) => u.id === b.user_id);
+                    return (
+                      <tr key={b.id} className="text-center">
+                        <td className="px-3 py-2 border">
+                          {user ? user.email : "User dihapus"}
+                        </td>
+                        <td className="px-3 py-2 border">
+                          {kos ? kos.name : "Kos dihapus"}
+                        </td>
+                        <td className="px-3 py-2 border">{b.rooms || 0}</td>
+                        <td className="px-3 py-2 border">
+                          {b.start_date || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
           </div>
         )}

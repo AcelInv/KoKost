@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { loadData, saveData } from "./data/storage";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import axios from "axios";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -10,53 +15,54 @@ import AdminDashboard from "./pages/AdminDashboard";
 import EditKosPage from "./pages/EditKosPage";
 
 export default function App() {
-  const [data, setData] = useState(() => loadData());
   const [user, setUser] = useState(null);
 
-  // Ambil user dari localStorage saat load halaman
+  // Cek user login dari localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem("currentUser");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
-  // Simpan data ke localStorage setiap data berubah
-  useEffect(() => {
-    saveData(data);
-  }, [data]);
+  // Login
+  const handleLogin = async (username, password) => {
+    try {
+      const res = await axios.post("http://localhost:3001/api/users/login", {
+        username,
+        password,
+      });
 
-  // Fungsi login
-  const handleLogin = (email, password) => {
-    const u = data.users.find((x) => x.email === email && x.password === password);
-    if (u) {
-      setUser(u);
-      localStorage.setItem("currentUser", JSON.stringify(u));
-    } else alert("Email atau password salah");
+      const data = res.data;
+      if (!res.status === 200) {
+        alert(data.error || "Login gagal");
+        return;
+      }
+
+      setUser(data);
+      localStorage.setItem("currentUser", JSON.stringify(data));
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi error koneksi ke server");
+    }
   };
 
-  // Fungsi register
-  const handleRegister = (email, password) => {
-    if (data.users.some((u) => u.email === email))
-      return alert("Email sudah terdaftar");
-    const newUser = { id: `u${Date.now()}`, email, password, role: "user" };
-    setData({ ...data, users: [...data.users, newUser] });
-    alert("Registrasi berhasil. Silakan login.");
-  };
+  // Register
+  const handleRegister = async (username, email, password) => {
+    try {
+      const res = await axios.post("http://localhost:3001/api/users/register", {
+        username,
+        email,
+        password,
+      });
 
-  // Fungsi booking kos
-  const handleBooking = (kos, rooms, date) => {
-    if (rooms > kos.availableRooms) return alert("Jumlah kamar tidak cukup");
+      const data = res.data;
+      if (res.status !== 201 && !data.success) {
+        throw new Error(data.error || "Registrasi gagal");
+      }
 
-    const booking = { id: `b${Date.now()}`, userId: user.id, kosId: kos.id, rooms, date };
-
-    setData({
-      ...data,
-      bookings: [...data.bookings, booking],
-      kosList: data.kosList.map((k) =>
-        k.id === kos.id ? { ...k, availableRooms: k.availableRooms - rooms } : k
-      ),
-    });
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
   };
 
   // Logout
@@ -65,48 +71,102 @@ export default function App() {
     localStorage.removeItem("currentUser");
   };
 
+  // Booking handler untuk DetailKos
+  const handleBook = async (kos, rooms, date) => {
+    try {
+      if (!user) {
+        return { success: false, error: "Silakan login terlebih dahulu" };
+      }
+
+      const res = await axios.post("http://localhost:3001/api/bookings", {
+        user_id: user.id,
+        kos_id: kos.id,
+        rooms,
+        start_date: date,
+      });
+
+      const data = res.data;
+
+      if (!res.status === 201 || !data.success) {
+        return { success: false, error: data.error || "Booking gagal" };
+      }
+
+      // Update jumlah available_rooms di frontend
+      return { success: true, available_rooms: data.available_rooms };
+    } catch (err) {
+      console.error(err);
+      return {
+        success: false,
+        error: "Gagal mengajukan booking, coba lagi nanti.",
+      };
+    }
+  };
+
   return (
     <Router>
       <Routes>
         <Route
           path="/"
           element={
-            user
-              ? <Navigate to={user.role === "admin" ? "/admin" : "/dashboard"} />
-              : <Login onLogin={handleLogin} />
+            user ? (
+              <Navigate to={user.role === "admin" ? "/admin" : "/dashboard"} />
+            ) : (
+              <Login onLogin={handleLogin} />
+            )
           }
         />
         <Route
           path="/register"
           element={<Register onRegister={handleRegister} />}
         />
+
+        {/* User Dashboard */}
         <Route
           path="/dashboard"
           element={
-            user
-              ? <UserDashboard data={data} user={user} onLogout={handleLogout} />
-              : <Navigate to="/" />
+            user ? (
+              <UserDashboard user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/" />
+            )
           }
         />
+
+        {/* Detail Kos */}
         <Route
           path="/kos/:id"
-          element={<DetailKos data={data} user={user} onBook={handleBooking} />}
+          element={
+            user ? (
+              <DetailKos user={user} onBook={handleBook} />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
         />
+
+        {/* Admin Dashboard */}
         <Route
-  path="/admin"
-  element={
-    user && user.role === "admin"
-      ? <AdminDashboard data={data} setData={setData} onLogout={handleLogout} />
-      : <Navigate to="/" />
-  }
-/>
+          path="/admin"
+          element={
+            user && user.role === "admin" ? (
+              <AdminDashboard onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
 
-<Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/kos" element={<AdminDashboard />} />
-        <Route path="/admin/edit-kos/:id" element={<EditKosPage />} />
-        {/* <Route path="/admin/add-kos" element={<AddKosPage />} /> */}
-        <Route path="*" element={<Navigate to="/admin/kos" replace />} />
-
+        {/* Admin Edit Kos */}
+        <Route
+          path="/admin/edit-kos/:id"
+          element={
+            user && user.role === "admin" ? (
+              <EditKosPage />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
       </Routes>
     </Router>
   );

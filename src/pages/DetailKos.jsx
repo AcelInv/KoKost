@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import axios from "axios";
 
-// Import icon dari react-icons
+// Import icon
 import { FiWifi } from "react-icons/fi";
 import { FaParking, FaBath, FaUserFriends } from "react-icons/fa";
 import { MdTv, MdBlock } from "react-icons/md";
@@ -19,7 +19,7 @@ export default function DetailKos({ user, onBook }) {
   const [date, setDate] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // Fetch data kos dari backend berdasarkan id
+  // Fetch kos data
   useEffect(() => {
     const fetchKos = async () => {
       try {
@@ -39,7 +39,7 @@ export default function DetailKos({ user, onBook }) {
   if (loading) return <p className="p-6 text-gray-700">Memuat data kos...</p>;
   if (!kos) return <p className="p-6 text-gray-700">Kos tidak ditemukan</p>;
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!date) {
       alert("Pilih tanggal mulai sewa terlebih dahulu");
       return;
@@ -59,8 +59,17 @@ export default function DetailKos({ user, onBook }) {
       return;
     }
 
-    onBook(kos, rooms, date);
-    setShowModal(true);
+    const result = await onBook(kos, rooms, date);
+    if (result.success) {
+      // update available_rooms di frontend
+      setKos((prev) => ({
+        ...prev,
+        available_rooms: prev.available_rooms - rooms,
+      }));
+      setShowModal(true);
+    } else {
+      alert(result.error || "Booking gagal, coba lagi nanti.");
+    }
   };
 
   const handleDownload = () => {
@@ -82,12 +91,9 @@ export default function DetailKos({ user, onBook }) {
     doc.text(`Mulai Sewa   : ${date}`, 20, 80);
 
     doc.setFontSize(10);
-    doc.text(
-      "Terima kasih telah menggunakan layanan KoKost.",
-      105,
-      100,
-      { align: "center" }
-    );
+    doc.text("Terima kasih telah menggunakan layanan KoKost.", 105, 100, {
+      align: "center",
+    });
 
     doc.save(`BuktiBooking-${kos.name}.pdf`);
   };
@@ -108,31 +114,13 @@ export default function DetailKos({ user, onBook }) {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Gambar & Deskripsi */}
+        {/* Left side: gambar & deskripsi */}
         <div className="lg:col-span-2">
           <div className="aspect-video w-full rounded-xl overflow-hidden mb-4">
             <img
               src={`http://localhost:3001${kos.image_url}`}
               alt={kos.name}
               className="w-full h-full object-cover"
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 mb-6">
-            <img
-              src={`http://localhost:3001${kos.image_url}`}
-              alt=""
-              className="w-full h-28 object-cover rounded"
-            />
-            <img
-              src={`http://localhost:3001${kos.image_url}`}
-              alt=""
-              className="w-full h-28 object-cover rounded"
-            />
-            <img
-              src={`http://localhost:3001${kos.image_url}`}
-              alt=""
-              className="w-full h-28 object-cover rounded"
             />
           </div>
 
@@ -143,7 +131,7 @@ export default function DetailKos({ user, onBook }) {
             </p>
           </div>
 
-          {/* Fasilitas (statis) */}
+          {/* Fasilitas */}
           <div className="bg-white rounded-xl shadow p-5 mt-6">
             <h2 className="text-xl font-semibold mb-4">Fasilitas</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-gray-700">
@@ -166,7 +154,7 @@ export default function DetailKos({ user, onBook }) {
             </div>
           </div>
 
-          {/* Peraturan khusus tipe kamar ini */}
+          {/* Peraturan */}
           <div className="bg-white rounded-xl shadow p-5 mt-6">
             <h2 className="text-xl font-semibold mb-4">
               Peraturan khusus tipe kamar ini
@@ -188,46 +176,64 @@ export default function DetailKos({ user, onBook }) {
           </div>
         </div>
 
-        {/* Info & Booking */}
+        {/* Right side: info & booking */}
         <div className="bg-white shadow-md rounded-xl p-6 h-fit">
           <h1 className="text-2xl font-bold mb-2">{kos.name}</h1>
           <p className="text-gray-600 mb-1">{kos.location}</p>
           <p className="text-blue-500 text-xl font-semibold mb-4">
             Rp {Number(kos.price).toLocaleString()} / bulan
           </p>
-          <p className="text-gray-700 mb-4">
-            Tersedia: {kos.availableRooms || kos.available_rooms} kamar
-          </p>
 
-          <label className="block text-sm text-gray-700 mb-1">Jumlah Kamar</label>
-          <input
-            type="number"
-            min="1"
-            max={kos.availableRooms || kos.available_rooms}
-            value={rooms}
-            onChange={(e) => setRooms(Number(e.target.value))}
-            className="border rounded w-full px-3 py-2 mb-4"
-          />
+          {kos.available_rooms === 0 ? (
+            <p className="text-red-500 font-semibold mb-4">Full booked</p>
+          ) : (
+            <>
+              <p className="text-gray-700 mb-4">
+                Tersedia: {kos.available_rooms} kamar
+              </p>
 
-          <label className="block text-sm text-gray-700 mb-1">Mulai Sewa</label>
-          <input
-            type="date"
-            value={date}
-            min={new Date().toISOString().split("T")[0]}
-            onChange={(e) => setDate(e.target.value)}
-            className="border rounded w-full px-3 py-2 mb-6"
-          />
+              <label className="block text-sm text-gray-700 mb-1">
+                Jumlah Kamar
+              </label>
+              <input
+                type="number"
+                min="1"
+                max={kos.available_rooms}
+                value={rooms}
+                onChange={(e) =>
+                  setRooms(
+                    Math.min(
+                      Math.max(1, Number(e.target.value)),
+                      kos.available_rooms
+                    )
+                  )
+                }
+                className="border rounded w-full px-3 py-2 mb-4"
+              />
 
-          <button
-            onClick={handleBooking}
-            className="bg-blue-500 hover:bg-blue-600 text-white w-full py-3 rounded-lg font-semibold"
-          >
-            Ajukan Sewa
-          </button>
+              <label className="block text-sm text-gray-700 mb-1">
+                Mulai Sewa
+              </label>
+              <input
+                type="date"
+                value={date}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={(e) => setDate(e.target.value)}
+                className="border rounded w-full px-3 py-2 mb-6"
+              />
+
+              <button
+                onClick={handleBooking}
+                className="bg-blue-500 hover:bg-blue-600 text-white w-full py-3 rounded-lg font-semibold"
+              >
+                Ajukan Sewa
+              </button>
+            </>
+          )}
         </div>
       </main>
 
-      {/* Modal Sukses */}
+      {/* Modal sukses */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-lg p-8 w-96 text-center">
