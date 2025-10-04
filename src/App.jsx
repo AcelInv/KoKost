@@ -47,23 +47,26 @@ export default function App() {
 
   // Register
   const handleRegister = async (username, email, password) => {
-    try {
-      const res = await axios.post("http://localhost:3001/api/users/register", {
-        username,
-        email,
-        password,
-      });
+  try {
+    const res = await axios.post("http://localhost:3001/api/users/register", {
+      username,
+      email,
+      password,
+    });
 
-      const data = res.data;
-      if (res.status !== 201 && !data.success) {
-        throw new Error(data.error || "Registrasi gagal");
-      }
+    const data = res.data;
 
+    // Anggap sukses kalau status 200/201 atau backend kirim success = true
+    if (res.status === 200 || res.status === 201 || data.success) {
       return { success: true };
-    } catch (err) {
-      return { success: false, message: err.message };
+    } else {
+      return { success: false, message: data.error || "Registrasi gagal" };
     }
-  };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};
+
 
   // Logout
   const handleLogout = () => {

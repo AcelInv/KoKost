@@ -7,7 +7,8 @@ export default function Register({ onRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [errors, setErrors] = useState({}); // simpan error tiap field
+  const [errors, setErrors] = useState({});
+  const [successMsg, setSuccessMsg] = useState(""); // pesan sukses
 
   const navigate = useNavigate();
 
@@ -38,7 +39,7 @@ export default function Register({ onRegister }) {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // true kalau tidak ada error
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -48,10 +49,14 @@ export default function Register({ onRegister }) {
     const result = await onRegister(username, email, password);
 
     if (result.success) {
-      navigate("/"); // hanya redirect kalau berhasil
+      setSuccessMsg(result.message || "Registrasi berhasil!");
+      setErrors({});
+      setTimeout(() => {
+        navigate("/"); // redirect ke login setelah sukses
+      }, 2000);
     } else {
-      // tampilkan pesan error dari backend
       setErrors({ global: result.message });
+      setSuccessMsg("");
     }
   };
 
@@ -60,9 +65,7 @@ export default function Register({ onRegister }) {
       <div className="bg-white shadow-xl rounded-2xl flex w-full max-w-5xl overflow-hidden">
         {/* Left: Form */}
         <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
-          <div className="mb-6 flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-blue-600">KoKost</h1>
-          </div>
+          <h1 className="text-2xl font-bold text-blue-600 mb-6">KoKost</h1>
 
           <h2 className="text-3xl font-bold text-gray-800 mb-1">
             Register Now
@@ -74,7 +77,6 @@ export default function Register({ onRegister }) {
             </Link>
           </p>
 
-          {/* FORM */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username */}
             <div className="relative">
@@ -141,15 +143,19 @@ export default function Register({ onRegister }) {
               </p>
             )}
 
+            {/* Success message */}
+            {successMsg && (
+              <p className="text-green-600 text-center text-sm font-medium">
+                {successMsg} (redirecting...)
+              </p>
+            )}
+
             <button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors"
             >
               SIGN UP
             </button>
-            <p className="text-xs text-gray-400 text-center">
-              By clicking the Sign Up button, you agree to the Privacy Policy.
-            </p>
           </form>
         </div>
 
