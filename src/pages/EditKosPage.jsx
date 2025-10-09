@@ -13,7 +13,6 @@ export default function EditKosPage() {
   const [image, setImage] = useState(null);
   const [oldImageUrl, setOldImageUrl] = useState(null);
 
-  // Ambil data kos berdasarkan ID
   useEffect(() => {
     const fetchKos = async () => {
       try {
@@ -34,13 +33,11 @@ export default function EditKosPage() {
     fetchKos();
   }, [id]);
 
-  // Handle input gambar baru
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) setImage(file);
   };
 
-  // Simpan perubahan kos
   const saveKos = async () => {
     if (!name || !location || !price || !availableRooms) {
       alert("Lengkapi semua field!");
@@ -60,7 +57,7 @@ export default function EditKosPage() {
       });
 
       alert("Berhasil update kos");
-      navigate("/admin?tab=kos"); // ✅ Kembali ke AdminDashboard tab Kos
+      navigate("/admin");
     } catch (err) {
       console.error(err);
       alert("Gagal update kos");
@@ -98,7 +95,6 @@ export default function EditKosPage() {
         onChange={(e) => setAvailableRooms(e.target.value)}
       />
 
-      {/* Upload Gambar */}
       <div className="mb-3">
         <label className="block mb-1 font-semibold">Gambar</label>
         {image ? (
@@ -117,7 +113,6 @@ export default function EditKosPage() {
         <input type="file" accept="image/*" onChange={handleImageChange} />
       </div>
 
-      {/* Tombol Simpan & Batal */}
       <button
         onClick={saveKos}
         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
@@ -125,7 +120,7 @@ export default function EditKosPage() {
         Simpan
       </button>
       <button
-        onClick={() => navigate("/admin?tab=kos")} // ✅ balik ke tab Kos admin
+        onClick={() => navigate("/admin/kos")}
         className="ml-4 bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
       >
         Batal

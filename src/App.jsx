@@ -13,6 +13,7 @@ import UserDashboard from "./pages/UserDashboard";
 import DetailKos from "./pages/DetailKos";
 import AdminDashboard from "./pages/AdminDashboard";
 import EditKosPage from "./pages/EditKosPage";
+import AddKos from "./pages/AddKos";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -47,26 +48,23 @@ export default function App() {
 
   // Register
   const handleRegister = async (username, email, password) => {
-  try {
-    const res = await axios.post("http://localhost:3001/api/users/register", {
-      username,
-      email,
-      password,
-    });
+    try {
+      const res = await axios.post("http://localhost:3001/api/users/register", {
+        username,
+        email,
+        password,
+      });
 
-    const data = res.data;
+      const data = res.data;
+      if (res.status !== 201 && !data.success) {
+        throw new Error(data.error || "Registrasi gagal");
+      }
 
-    // Anggap sukses kalau status 200/201 atau backend kirim success = true
-    if (res.status === 200 || res.status === 201 || data.success) {
       return { success: true };
-    } else {
-      return { success: false, message: data.error || "Registrasi gagal" };
+    } catch (err) {
+      return { success: false, message: err.message };
     }
-  } catch (err) {
-    return { success: false, message: err.message };
-  }
-};
-
+  };
 
   // Logout
   const handleLogout = () => {
@@ -170,6 +168,7 @@ export default function App() {
             )
           }
         />
+        <Route path="/admin/add-kos" element={<AddKos />} />
       </Routes>
     </Router>
   );

@@ -9,7 +9,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import axios from "axios";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   PieChart,
   Pie,
@@ -20,18 +20,13 @@ import {
 } from "recharts";
 
 export default function AdminDashboard({ onLogout }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Baca query parameter ?tab=...
-  const queryParams = new URLSearchParams(location.search);
-  const initialTab = queryParams.get("tab") || "dashboard";
-
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [kosList, setKosList] = useState([]);
   const [users, setUsers] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [expandedUserId, setExpandedUserId] = useState(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
