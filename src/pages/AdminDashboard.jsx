@@ -9,7 +9,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // ✅ Tambah useLocation
 import {
   PieChart,
   Pie,
@@ -27,6 +27,14 @@ export default function AdminDashboard({ onLogout }) {
   const [expandedUserId, setExpandedUserId] = useState(null);
 
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ Tambah hook location
+
+  // ✅ Jika user datang dari /admin/kos (misalnya setelah klik “Batal” di edit)
+  useEffect(() => {
+    if (location.pathname === "/admin/kos") {
+      setActiveTab("kos");
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     const fetchData = async () => {
