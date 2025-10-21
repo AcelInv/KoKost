@@ -1,6 +1,7 @@
+import axios from "axios";
+
 console.log("🔗 API_URL =", import.meta.env.VITE_API_URL);
 
-import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 const api = axios.create({
