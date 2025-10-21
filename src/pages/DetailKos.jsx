@@ -23,7 +23,7 @@ export default function DetailKos({ user, onBook }) {
   useEffect(() => {
     const fetchKos = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/api/kos`);
+        const res = await axios.get(`https://kokost-backend.vercel.app/api/kos`);
         const kosData = res.data.find((k) => k.id === Number(id));
         setKos(kosData || null);
       } catch (err) {
@@ -118,7 +118,7 @@ export default function DetailKos({ user, onBook }) {
         <div className="lg:col-span-2">
           <div className="aspect-video w-full rounded-xl overflow-hidden mb-4">
             <img
-              src={`http://localhost:3001${kos.image_url}`}
+              src={`https://kokost-backend.vercel.app${kos.image_url}`}
               alt={kos.name}
               className="w-full h-full object-cover"
             />

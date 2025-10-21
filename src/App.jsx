@@ -27,7 +27,7 @@ export default function App() {
   // Login
   const handleLogin = async (username, password) => {
     try {
-      const res = await axios.post("http://localhost:3001/api/users/login", {
+      const res = await axios.post("https://kokost-backend.vercel.app/api/users/login", {
         username,
         password,
       });
@@ -49,7 +49,7 @@ export default function App() {
   // Register
   const handleRegister = async (username, email, password) => {
     try {
-      const res = await axios.post("http://localhost:3001/api/users/register", {
+      const res = await axios.post("https://kokost-backend.vercel.app/api/users/register", {
         username,
         email,
         password,
@@ -79,7 +79,7 @@ export default function App() {
         return { success: false, error: "Silakan login terlebih dahulu" };
       }
 
-      const res = await axios.post("http://localhost:3001/api/bookings", {
+      const res = await axios.post("https://kokost-backend.vercel.app/api/bookings", {
         user_id: user.id,
         kos_id: kos.id,
         rooms,

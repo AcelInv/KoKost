@@ -37,7 +37,7 @@ export default function AddKos() {
       data.append("description", formData.description);
       if (image) data.append("image", image);
 
-      await axios.post("http://localhost:3001/api/kos", data, {
+      await axios.post("https://kokost-backend.vercel.app/api/kos", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

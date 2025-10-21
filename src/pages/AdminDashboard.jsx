@@ -32,9 +32,9 @@ export default function AdminDashboard({ onLogout }) {
     const fetchData = async () => {
       try {
         const [kosRes, usersRes, bookingsRes] = await Promise.all([
-          axios.get("http://localhost:3001/api/kos"),
-          axios.get("http://localhost:3001/api/users"),
-          axios.get("http://localhost:3001/api/bookings"),
+          axios.get("https://kokost-backend.vercel.app/api/kos"),
+          axios.get("https://kokost-backend.vercel.app/api/users"),
+          axios.get("https://kokost-backend.vercel.app/api/bookings"),
         ]);
 
         setKosList(kosRes.data);
@@ -53,7 +53,7 @@ export default function AdminDashboard({ onLogout }) {
     if (!window.confirm("Apakah yakin ingin menghapus kos ini?")) return;
 
     try {
-      await axios.delete(`http://localhost:3001/api/kos/${id}`);
+      await axios.delete(`https://kokost-backend.vercel.app/api/kos/${id}`);
       setKosList(kosList.filter((k) => k.id !== id));
     } catch (err) {
       console.error(err);
@@ -65,7 +65,7 @@ export default function AdminDashboard({ onLogout }) {
     if (!window.confirm("Apakah yakin ingin menghapus user ini?")) return;
 
     try {
-      await axios.delete(`http://localhost:3001/api/users/${id}`);
+      await axios.delete(`https://kokost-backend.vercel.app/api/users/${id}`);
       setUsers(users.filter((u) => u.id !== id));
     } catch (err) {
       console.error(err);
@@ -337,7 +337,7 @@ export default function AdminDashboard({ onLogout }) {
                     <div className="flex-1">
                       {k.image_url && (
                         <img
-                          src={`http://localhost:3001${k.image_url}`}
+                          src={`https://kokost-backend.vercel.app${k.image_url}`}
                           alt={k.name}
                           className="w-full h-40 object-cover rounded mb-2"
                         />

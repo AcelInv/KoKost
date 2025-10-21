@@ -25,7 +25,7 @@ export default function UserDashboard({ user, setSelectedKos, onLogout }) {
   useEffect(() => {
     const fetchKos = async () => {
       try {
-        const res = await axios.get("http://localhost:3001/api/kos");
+        const res = await axios.get("https://kokost-backend.vercel.app/api/kos");
         const mapped = res.data.map((k) => ({
           ...k,
           availableRooms: k.available_rooms,
@@ -179,7 +179,7 @@ export default function UserDashboard({ user, setSelectedKos, onLogout }) {
                 >
                   <div className="h-48 w-full overflow-hidden relative">
                     <img
-                      src={`http://localhost:3001${k.image_url}`}
+                      src={`https://kokost-backend.vercel.app${k.image_url}`}
                       alt={k.name}
                       className="object-cover w-full h-full hover:scale-105 transition-transform duration-300"
                     />

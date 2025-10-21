@@ -16,7 +16,7 @@ export default function EditKosPage() {
   useEffect(() => {
     const fetchKos = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/api/kos/${id}`);
+        const res = await axios.get(`https://kokost-backend.vercel.app/api/kos/${id}`);
         const kos = res.data;
 
         setName(kos.name);
@@ -52,7 +52,7 @@ export default function EditKosPage() {
       formData.append("available_rooms", availableRooms);
       if (image) formData.append("image", image);
 
-      await axios.put(`http://localhost:3001/api/kos/${id}`, formData, {
+      await axios.put(`https://kokost-backend.vercel.app/api/kos/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -105,7 +105,7 @@ export default function EditKosPage() {
           />
         ) : oldImageUrl ? (
           <img
-            src={`http://localhost:3001${oldImageUrl}`}
+            src={`https://kokost-backend.vercel.app${oldImageUrl}`}
             alt="Existing"
             className="w-40 h-40 object-cover rounded mb-2"
           />
