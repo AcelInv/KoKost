@@ -2,8 +2,7 @@ import axios from "axios";
 
 console.log("🔗 API_URL =", import.meta.env.VITE_API_URL);
 
-const API_URL =
-  import.meta.env.VITE_API_URL || "https://kokost-backend.vercel.app";
+const API_URL = import.meta.env.VITE_API_URL || "https://kokost-backend.vercel.app";
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
