@@ -1,7 +1,13 @@
 import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const api = axios.create({
+  baseURL: `${API_URL}/api`,
+});
 
-export const getKos = () => axios.get(`${API_BASE}/kos`);
-export const getUsers = () => axios.get(`${API_BASE}/users`);
-export const getBookings = () => axios.get(`${API_BASE}/bookings`);
+// ====== ENDPOINTS ======
+export const getKos = () => api.get("/kos");
+export const getUsers = () => api.get("/users");
+export const getBookings = () => api.get("/bookings");
+
+export default api;
